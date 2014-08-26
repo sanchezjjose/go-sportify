@@ -23,15 +23,6 @@ type Game struct {
 
 func main() {
 
-  fmt.Println()
-
-
-  fmt.Println("\n===================")
-  fmt.Println("USING CUSTOM LIBRARY")
-  fmt.Println("===================\n")
-  fmt.Println(helper.SayHello("Special Ops"))
-
-
   fmt.Println("\n===================")
   fmt.Println("OBJECT TO JSON")
   fmt.Println("===================\n")
