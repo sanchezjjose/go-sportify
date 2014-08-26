@@ -4,7 +4,6 @@ import "fmt"
 import "encoding/json"
 import "net/http"
 import "io/ioutil"
-import "sportify.com/app/helper"
 
 
 type Game struct {
@@ -24,7 +23,6 @@ type Game struct {
 
 func main() {
 
-  fmt.Println(helper.SayHello("Special Ops!"))
   fmt.Println()
 
 
