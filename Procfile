@@ -1,1 +1,1 @@
-go run server.go 
+web: go-sportify

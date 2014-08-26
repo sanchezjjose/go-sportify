@@ -7,7 +7,9 @@ import (
   "regexp"
   "encoding/json"
   "io/ioutil"
-  "go/build"
+  "os"
+  "path"
+  "log"
 )
 
 type Game struct {
@@ -25,14 +27,14 @@ type Game struct {
   Season string `json:"season"`
 }
 
-var templates = template.Must(template.ParseFiles(build.Default.GOPATH + "/src/github.com/sanchezjjose/go-sportify/template/homePage.html"))
+var templates = template.Must(template.ParseFiles("templates/layout.html", "templates/home.html"))
 
 var validPath = regexp.MustCompile("^/(home|roster)/")
 
 /*
  * Convert JSON Response to Game Object
  */
-func loadPage(title string) (*Game, error) {
+func getNextGame() (*Game, error) {
   url := "http://sportify-gilt.heroku.com/json/nextgame"
   res, err := http.Get(url)
   if err != nil {
@@ -58,14 +60,15 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Game) {
   }
 }
 
-func homepageHandler(w http.ResponseWriter, r *http.Request, title string) {
-  p, err := loadPage(title)
+func homeHandler(w http.ResponseWriter, r *http.Request, title string) {
+  p, err := getNextGame()
   if err != nil {
+    log.Println("BBB")
     http.Redirect(w, r, "/home/" + title, http.StatusFound)
     return
   }
 
-  renderTemplate(w, "homePage", p)
+  renderTemplate(w, "home", p)
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
@@ -82,7 +85,50 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 func main() {
   fmt.Printf("starting server...")
 
-  http.HandleFunc("/home/", makeHandler(homepageHandler))
+  fs := http.FileServer(http.Dir("static"))
+  http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-  http.ListenAndServe(":8000", nil)
+  // Method A
+  http.HandleFunc("/", serveTemplate)
+
+  // Method B
+  http.HandleFunc("/home/", makeHandler(homeHandler))
+
+  http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+}
+
+func serveTemplate(w http.ResponseWriter, r *http.Request) {
+  lp := path.Join("templates", "layout.html")
+  fp := path.Join("templates", r.URL.Path) // e.g, home.html
+
+  //Return a 404 if the template doesn't exist
+  info, err := os.Stat(fp)
+  if err != nil {
+    if os.IsNotExist(err) {
+      http.NotFound(w, r)
+      return
+    }
+  }
+
+  //Return a 404 if the request is for a directory
+  if info.IsDir() {
+    http.NotFound(w, r)
+    return
+  }
+
+  templates, err := template.ParseFiles(lp)
+  if err != nil {
+    // Log the detailed error
+    log.Println(err.Error())
+    // Return a generic "Internal Server Error" message
+    http.Error(w, http.StatusText(500), 500)
+    return
+  }
+
+  nextGame, err := getNextGame()
+  if err := templates.ExecuteTemplate(w, "layout", nextGame); err != nil {
+    log.Println(err.Error())
+    http.Error(w, http.StatusText(500), 500)
+  }
+
 }

@@ -1,0 +1,39 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sportify</title>
+  <link rel="stylesheet" href="/static/stylesheets/main.css">
+</head>
+<body>
+  <h1>{{.Season}} Season</h1>
+
+  <h3>Next Game:</h3>
+
+  <p>Location: {{.Address}}</p>
+  <p>Start Time: {{.StartTime}}</p>
+  <p>{{printf "Gym: %s" .Gym}}</p>
+
+  <h4>Players In:</h4>
+
+  {{range .PlayersIn}}
+    * {{.}} <br>
+  {{end}}
+
+  <h4>Players Out:</h4>
+
+  {{range .PlayersOut}}
+    * {{.}} <br>
+  {{end}}
+</body>
+</html>
+
+<!-- {{define "title"}} -->
+<!-- {{end}} -->
+
+<!-- {{define "body"}} -->
+<!-- {{end}} -->
+
+
+

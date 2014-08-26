@@ -1,0 +1,5 @@
+{
+	"ImportPath": "github.com/sanchezjjose/go-sportify",
+	"GoVersion": "go1.3",
+	"Deps": []
+}
