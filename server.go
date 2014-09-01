@@ -27,7 +27,7 @@ type Game struct {
   Season string `json:"season"`
 }
 
-var templates = template.Must(template.ParseFiles("templates/layout.html", "templates/home.html"))
+var templates = template.Must(template.ParseFiles("templates/layout.html", "templates/home.html", "templates/roster.html"))
 
 var validPath = regexp.MustCompile("^/(home|roster)/")
 
@@ -63,12 +63,21 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Game) {
 func homeHandler(w http.ResponseWriter, r *http.Request, title string) {
   p, err := getNextGame()
   if err != nil {
-    log.Println("BBB")
     http.Redirect(w, r, "/home/" + title, http.StatusFound)
     return
   }
 
   renderTemplate(w, "home", p)
+}
+
+func rosterHandler(w http.ResponseWriter, r *http.Request, title string) {
+  p, err := getNextGame()
+  if err != nil {
+    http.Redirect(w, r, "/roster/" + title, http.StatusFound)
+    return
+  }
+
+  renderTemplate(w, "roster", p)
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
@@ -93,6 +102,7 @@ func main() {
 
   // Method B
   http.HandleFunc("/home/", makeHandler(homeHandler))
+  http.HandleFunc("/roster/", makeHandler(rosterHandler))
 
   http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
@@ -116,7 +126,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  templates, err := template.ParseFiles(lp)
+  templates, err := template.ParseFiles(lp, fp)
   if err != nil {
     // Log the detailed error
     log.Println(err.Error())
@@ -125,8 +135,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  nextGame, err := getNextGame()
-  if err := templates.ExecuteTemplate(w, "layout", nextGame); err != nil {
+  if err := templates.ExecuteTemplate(w, "layout", nil); err != nil {
     log.Println(err.Error())
     http.Error(w, http.StatusText(500), 500)
   }
